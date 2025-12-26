@@ -14,12 +14,15 @@ import 'dart:async';
 import 'package:reprise/services/local_storage_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:reprise/services/workout_notification_service.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
+
 
 class WorkoutScreen extends StatefulWidget {
   final Workout?  workout;
   final bool isTemplate;
   final bool autoStart;
   final bool resumeActive;
+  final bool isPastWorkout;
 
   const WorkoutScreen({
     super.key,
@@ -27,6 +30,7 @@ class WorkoutScreen extends StatefulWidget {
     this.isTemplate = false,
     this.autoStart = false,
     this. resumeActive = false,
+    this.isPastWorkout = false,
   });
 
   @override
@@ -111,7 +115,8 @@ void initState() {
     _currentWorkout.date.day,
   );
   _isPastWorkout = workoutDate.  isBefore(today);
-  
+  _isPastWorkout = widget.isPastWorkout || workoutDate.isBefore(today);
+
   // ✅ Handle resume from active workout
   if (widget.resumeActive && ! _isEditingTemplate && !_isPastWorkout) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -214,6 +219,113 @@ void dispose() {
     
     }
   });
+}
+
+Future<void> _promptForDuration() async {
+  final durationController = TextEditingController();
+  
+  final result = await showDialog<int? >(
+    context: context,
+    barrierDismissible: false, // Prevent dismissing by tapping outside
+    builder:  (dialogContext) => AlertDialog(
+      title: Text('Workout Duration', style: AppTextStyles. h3()),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'How long was this workout?',
+            style: AppTextStyles. body(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: durationController,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            decoration:  const InputDecoration(
+              labelText: 'Duration (minutes)',
+              hintText: 'e.g., 45',
+              prefixIcon: Icon(Icons.access_time),
+            ),
+            onSubmitted: (value) {
+              final minutes = int.tryParse(value);
+              if (minutes != null && minutes > 0) {
+                Navigator.pop(dialogContext, minutes);
+              }
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(dialogContext, null); // Return null for cancel
+          },
+          child:  const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final minutes = int.tryParse(durationController.text);
+            if (minutes != null && minutes > 0) {
+              Navigator. pop(dialogContext, minutes);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enter a valid duration'),
+                  backgroundColor: AppColors.error,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          child:  const Text('Continue'),
+        ),
+      ],
+    ),
+  );
+
+  durationController.dispose();
+
+  // ✅ Handle the result
+  if (result == null) {
+    // User pressed cancel - show warning dialog
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Cancel Workout Log? ', style: AppTextStyles.h3()),
+        content: Text(
+          'A duration is required to log a completed workout. If you go back, this workout will not be saved.\n\nWhat would you like to do?',
+          style: AppTextStyles.body(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false), // Stay
+            child: const Text('Enter Duration'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true), // Exit
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors. error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Go Back'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldExit == true && mounted) {
+      // User chose to go back - exit workout screen
+      Navigator.pop(context);
+    } else {
+      // User chose to stay - prompt again for duration
+      await _promptForDuration();
+    }
+  } else if (result > 0) {
+    // Valid duration entered
+    setState(() {
+      _manualDurationMinutes = result;
+    });
+  }
 }
 
   void _pauseWorkout() {
@@ -1063,88 +1175,126 @@ void dispose() {
     );
   }
 
-  void _showDurationInputDialog() {
-    final durationController = TextEditingController(
-      text: _manualDurationMinutes > 0 ? _manualDurationMinutes.toString() : '',
-    );
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title:   Text('Workout Duration', style: AppTextStyles.h3()),
-        content: Column(
-          mainAxisSize:  MainAxisSize.min,
-          children: [
-            Text(
-              'How long did this workout take?  ',
-              style: AppTextStyles. body(color: AppColors.textSecondaryLight),
+void _showDurationInputDialog() {
+  final durationController = TextEditingController(
+    text: _manualDurationMinutes > 0 ? _manualDurationMinutes.toString() : '',
+  );
+  
+  showDialog(
+    context: context,
+    barrierDismissible:  false,
+    builder: (dialogContext) => AlertDialog(
+      title:  Text('Workout Duration', style:  AppTextStyles.h3()),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'How long did this workout take?',
+            style: AppTextStyles. body(color: AppColors.textSecondaryLight),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: durationController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Duration (minutes)',
+              hintText: 'e.g., 60',
+              prefixIcon:  Icon(Icons.timer),
+              suffixText: 'min',
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: durationController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Duration (minutes)',
-                hintText: 'e.g., 60',
-                prefixIcon: Icon(Icons. timer),
-                suffixText: 'min',
-              ),
-              autofocus: true,
-              onSubmitted: (_) {
-                final duration = int.tryParse(durationController.text) ?? 0;
-                if (duration > 0 && duration <= 600) {
-                  setState(() {
-                    _manualDurationMinutes = duration;
-                  });
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Duration set to $duration minutes'),
-                      duration: const Duration(milliseconds: 800),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-        actions: [
-          if (_manualDurationMinutes > 0)
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child:   const Text('Cancel'),
-            ),
-          ElevatedButton(
-            onPressed: () {
+            autofocus: true,
+            onSubmitted: (_) {
               final duration = int.tryParse(durationController.text) ?? 0;
               if (duration > 0 && duration <= 600) {
                 setState(() {
                   _manualDurationMinutes = duration;
                 });
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.  of(context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Duration set to $duration minutes'),
                     duration: const Duration(milliseconds: 800),
                   ),
                 );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid duration (1-600 minutes)'),
-                    duration: Duration(milliseconds: 800),
-                  ),
-                );
               }
             },
-            child: const Text('Set'),
           ),
         ],
       ),
-    );
-  }
+      actions: [
+        // ✅ FIXED: Always show Cancel button
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(dialogContext);
+            
+            // ✅ Show warning if no duration set yet
+            if (_manualDurationMinutes == 0) {
+              final shouldExit = await showDialog<bool>(
+                context: context,
+                builder: (warningContext) => AlertDialog(
+                  title: Text('Cancel Workout Log? ', style: AppTextStyles.h3()),
+                  content: Text(
+                    'A duration is required to log a completed workout. If you go back, this workout will not be saved.\n\nWhat would you like to do?',
+                    style: AppTextStyles.body(),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(warningContext, false),
+                      child:  const Text('Enter Duration'),
+                    ),
+                    ElevatedButton(
+                      onPressed:  () => Navigator.pop(warningContext, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              );
 
+              if (shouldExit == true && mounted) {
+                // User chose to exit - go back to calendar
+                Navigator.pop(context);
+              } else if (mounted) {
+                // User chose to enter duration - show dialog again
+                _showDurationInputDialog();
+              }
+            }
+            // If duration already set, just close dialog (existing behavior)
+          },
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed:  () {
+            final duration = int.tryParse(durationController.text) ?? 0;
+            if (duration > 0 && duration <= 600) {
+              setState(() {
+                _manualDurationMinutes = duration;
+              });
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Duration set to $duration minutes'),
+                  duration: const Duration(milliseconds: 800),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enter a valid duration (1-600 minutes)'),
+                  duration: Duration(milliseconds: 800),
+                ),
+              );
+            }
+          },
+          child: const Text('Set'),
+        ),
+      ],
+    ),
+  );
+}
 
 
   void _finishWorkout() {

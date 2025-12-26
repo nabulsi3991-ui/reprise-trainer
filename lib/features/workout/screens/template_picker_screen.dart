@@ -8,6 +8,7 @@ import 'package:reprise/features/workout/screens/workout_screen.dart';
 import 'package:reprise/shared/models/workout.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
 
 class TemplatePickerScreen extends StatelessWidget {
   final bool isScheduling;
@@ -121,8 +122,18 @@ class TemplatePickerScreen extends StatelessWidget {
     final exerciseCount = template.exercises.length;
     final totalSets = template.exercises
         .fold<int>(0, (sum, exercise) => sum + exercise.sets.length);
-
-    return Card(
+        return SwipeToDelete(
+    confirmationTitle: 'Delete Template',
+    confirmationMessage: 'Are you sure you want to delete "${template.name}"?',
+    onDelete: () {
+      workoutProvider.deleteTemplate(template. id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${template.name} deleted'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );}, child: Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
         onTap:  () {
@@ -235,7 +246,7 @@ class TemplatePickerScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),);
   }
 
   void _scheduleWorkout(

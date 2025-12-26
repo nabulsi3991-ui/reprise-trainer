@@ -4,6 +4,7 @@ import 'package:reprise/core/constants/app_text_styles.dart';
 import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/shared/models/exercise_library.dart';
 import 'package:reprise/features/workout/screens/custom_exercise_screen.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
 
 class ExerciseSelectorScreen extends StatefulWidget {
   const ExerciseSelectorScreen({super.key});
@@ -269,120 +270,151 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
   }
 
   Widget _buildExerciseCard(ExerciseTemplate exercise) {
-    final isCustom = ExerciseLibrary.isCustomExercise(exercise.id);
+  final isCustom = ExerciseLibrary.isCustomExercise(exercise.id);
 
-    return Card(
-      margin:  const EdgeInsets.only(bottom: AppSpacing.md),
-      child: InkWell(
-        onTap: () {
-          Navigator. pop(context, exercise);
-        },
-        onLongPress: isCustom ?  () => _showDeleteConfirmation(exercise) : null,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.getMuscleGroupColor(exercise.muscleGroups. first)
-                          .withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(AppSpacing. radiusSmall),
-                    ),
-                    child: Icon(
-                      _getExerciseIcon(exercise.muscleGroups.first),
-                      color: AppColors.getMuscleGroupColor(exercise.muscleGroups.first),
-                      size: 24,
-                    ),
+  final cardContent = Card(
+    margin: const EdgeInsets.only(bottom: AppSpacing.md),
+    child: InkWell(
+      onTap: () {
+        Navigator.pop(context, exercise);
+      },
+      onLongPress: isCustom ? () => _showDeleteConfirmation(exercise) : null,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment:  CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets. all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.getMuscleGroupColor(exercise.muscleGroups.first)
+                        .withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
+                  child: Icon(
+                    _getExerciseIcon(exercise. muscleGroups.first),
+                    color: AppColors.getMuscleGroupColor(exercise.muscleGroups.first),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment. start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              exercise.name,
+                              style: AppTextStyles.h3(),
+                            ),
+                          ),
+                          if (isCustom)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.secondary,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                               child: Text(
-                                exercise.name,
-                                style: AppTextStyles.h3(),
+                                'CUSTOM',
+                                style: AppTextStyles.caption(color: Colors.white),
                               ),
                             ),
-                            if (isCustom)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors. secondary,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'CUSTOM',
-                                  style:  AppTextStyles.caption(color: Colors.white),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Row(
-                          children: [
-                            Icon(
-                              _getEquipmentIcon(exercise.equipment),
-                              size: 14,
-                              color: AppColors.textSecondaryLight,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              exercise.equipment,
-                              style: AppTextStyles.caption(),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        exercise.muscleGroups.join(', '),
+                        style: AppTextStyles.caption(),
+                      ),
+                    ],
                   ),
-                  if (isCustom)
-                    IconButton(
-                      icon:  const Icon(Icons.delete_outline, size: 20),
-                      color: AppColors.error,
-                      onPressed: () => _showDeleteConfirmation(exercise),
-                      tooltip: 'Delete Custom Exercise',
-                    )
-                  else
-                    const Icon(Icons.chevron_right),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.xs,
-                children: exercise.muscleGroups.map((group) {
-                  return Chip(
-                    label: Text(
-                      group,
-                      style: AppTextStyles.caption(color: Colors.white),
-                    ),
-                    backgroundColor: AppColors.getMuscleGroupColor(group),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: AppSpacing.sm),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textSecondaryLight),
+              ],
+            ),
+            if (exercise.description != null && exercise.description!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing. sm),
               Text(
-                exercise.description,
+                exercise.description!,
                 style: AppTextStyles.bodySmall(color: AppColors.textSecondaryLight),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
+            const SizedBox(height: AppSpacing. sm),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.fitness_center, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        exercise.equipment,
+                        style: AppTextStyles.caption(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${exercise.defaultSets} × ${exercise.defaultReps}',
+                    style: AppTextStyles.caption(),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+    ),
+  );
+
+  // Wrap custom exercises with swipe-to-delete
+  if (isCustom) {
+    return SwipeToDelete(
+      confirmationTitle: 'Delete Custom Exercise',
+      confirmationMessage:  'Delete "${exercise.name}"?  This will remove it from your library.',
+      onDelete: () {
+        ExerciseLibrary.deleteCustomExercise(exercise.id);
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:  Text('${exercise.name} deleted'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: cardContent,
     );
   }
+
+  return cardContent;
+}
 
   void _showDeleteConfirmation(ExerciseTemplate exercise) {
     showDialog(

@@ -8,6 +8,7 @@ import 'package:reprise/features/workout/screens/workout_detail_screen.dart';
 import 'package:reprise/shared/models/workout.dart';
 import 'package:reprise/services/local_storage_service.dart';
 import 'package:intl/intl.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
@@ -127,21 +128,35 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   }
 
   Widget _buildWorkoutCard(Workout workout) {
-    final weightUnit = LocalStorageService.getSetting('weightUnit', defaultValue: 'lbs');
-    
-    final daysAgo = DateTime.now().difference(workout.date).inDays;
-    final dateText = daysAgo == 0 
-        ? 'Today' 
-        : daysAgo == 1 
-            ? 'Yesterday' 
-            : DateFormat('MMM d, yyyy').format(workout.date);
+  final weightUnit = LocalStorageService. getSetting('weightUnit', defaultValue: 'lbs');
+  
+  final daysAgo = DateTime.now().difference(workout.date).inDays;
+  final dateText = daysAgo == 0 
+      ? 'Today' 
+      : daysAgo == 1 
+          ? 'Yesterday' 
+          : DateFormat('MMM d, yyyy').format(workout.date);
 
-    final displayVolume = weightUnit == 'kg'
-        ? (workout.totalVolume * 0.453592).toInt()
-        : workout.totalVolume;
+  final displayVolume = weightUnit == 'kg'
+      ? (workout.totalVolume * 0.453592).toInt()
+      : workout.totalVolume;
 
-    return Card(
-      margin: const EdgeInsets. only(bottom: AppSpacing. md),
+  return SwipeToDelete(
+    confirmationTitle: 'Delete Workout',
+    confirmationMessage: 'Are you sure you want to delete this workout?  This cannot be undone.',
+    onDelete: () {
+      final workoutProvider = Provider.of<WorkoutProvider>(context, listen:  false);
+      workoutProvider. deleteWorkout(workout.id, workout.date);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Workout deleted'),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds:  2),
+        ),
+      );
+    },
+    child: Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -153,9 +168,9 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
         },
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets. all(AppSpacing.md),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment. start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -163,69 +178,92 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                   Expanded(
                     child: Text(workout.name, style: AppTextStyles.h3()),
                   ),
-                  Text(dateText, style: AppTextStyles.caption()),
+                  Text(dateText, style: AppTextStyles. caption()),
                 ],
               ),
-              const SizedBox(height:  AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
               
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing. sm,
+                  horizontal: AppSpacing.sm,
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
                   color: workout.status == WorkoutStatus.completed
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors. info.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+                      ? AppColors.success. withOpacity(0.2)
+                      : AppColors. warning.withOpacity(0.2),
+                  borderRadius:  BorderRadius.circular(4),
                 ),
                 child:  Text(
-                  workout.status == WorkoutStatus.completed 
-                      ? 'Completed' 
+                  workout.status == WorkoutStatus.completed
+                      ? 'Completed'
                       : 'Scheduled',
                   style: AppTextStyles.caption(
                     color: workout.status == WorkoutStatus.completed
                         ? AppColors.success
-                        : AppColors.info,
+                        : AppColors.warning,
                   ),
                 ),
               ),
               
-              const SizedBox(height: AppSpacing.sm),
-              
-              Wrap(
-                spacing: AppSpacing.sm,
-                children: workout.muscleGroups
-                    .map((group) => Chip(
-                          label: Text(
-                            group,
-                            style:  AppTextStyles.caption(color: Colors.white),
-                          ),
-                          backgroundColor: AppColors.getMuscleGroupColor(group),
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                        ))
-                    . toList(),
-              ),
+              const SizedBox(height:  AppSpacing.sm),
               
               if (workout.status == WorkoutStatus.completed) ...[
-                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    const Icon(Icons.fitness_center, size: 16, color:  AppColors.textSecondaryLight),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text('$displayVolume $weightUnit', style: AppTextStyles.bodySmall()),
+                    Icon(
+                      Icons.fitness_center,
+                      size:  16,
+                      color:  AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$displayVolume $weightUnit',
+                      style: AppTextStyles. bodySmall(),
+                    ),
                     const SizedBox(width: AppSpacing.md),
-                    const Icon(Icons.access_time, size: 16, color: AppColors.textSecondaryLight),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text('${workout.durationMinutes} min', style: AppTextStyles.bodySmall()),
+                    Icon(
+                      Icons.access_time,
+                      size:  16,
+                      color:  AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${workout. durationMinutes} min',
+                      style: AppTextStyles.bodySmall(),
+                    ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.sm),
               ],
+              
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: workout.muscleGroups.take(3).map((group) {
+                  return Container(
+                    padding: const EdgeInsets. symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.getMuscleGroupColor(group).withOpacity(0.2),
+                      borderRadius: BorderRadius. circular(4),
+                    ),
+                    child: Text(
+                      group,
+                      style: AppTextStyles.caption(
+                        color: AppColors.getMuscleGroupColor(group),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

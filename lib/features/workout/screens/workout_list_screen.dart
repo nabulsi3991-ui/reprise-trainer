@@ -10,6 +10,7 @@ import 'package:reprise/features/workout/screens/workout_detail_screen.dart';
 import 'package:reprise/features/workout/providers/workout_provider.dart';
 import 'package:reprise/shared/models/workout.dart';
 import 'package:uuid/uuid.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
 
 class WorkoutListScreen extends StatelessWidget {
   const WorkoutListScreen({super.key});
@@ -67,109 +68,119 @@ class WorkoutListScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context, WorkoutProvider workoutProvider) {
-    final hasTemplates = workoutProvider.templates. isNotEmpty;
+  final hasTemplates = workoutProvider.templates.isNotEmpty;
 
-    return Column(
-      children: [
-        // Start from Template (if templates exist)
-        if (hasTemplates)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton. icon(
+  return Column(
+    children:  [
+      // Start from Template - ALWAYS VISIBLE NOW
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton. icon(
+          onPressed: () {
+            if (hasTemplates) {
+              _showTemplateSelector(context, workoutProvider);
+            } else {
+              // Show message if no templates
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Please create a template first! '),
+                  backgroundColor: AppColors.warning,
+                  duration: const Duration(seconds: 2),
+                  action: SnackBarAction(
+                    label: 'Create',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      // Navigate to template creation
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TemplatePickerScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }
+          },
+          icon:  Icon(Icons.list_alt, size: 28, color: hasTemplates ? Colors.white : AppColors.textSecondaryLight),
+          label: Text(
+            'Start from Template',
+            style:  TextStyle(
+              fontSize: 18,
+              color: hasTemplates ? Colors.white : AppColors.textSecondaryLight,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: hasTemplates ? AppColors.primary : AppColors.surfaceLight,
+            foregroundColor: hasTemplates ? Colors.white : AppColors.textSecondaryLight,
+            padding:  const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+          ),
+        ),
+      ),
+      
+      const SizedBox(height: AppSpacing.md),
+
+      // Start Empty Workout
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () {
+            _startEmptyWorkout(context);
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Start Empty Workout'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          ),
+        ),
+      ),
+      
+      const SizedBox(height:  AppSpacing.md),
+
+      // Other Actions Row
+      Row(
+        children:  [
+          Expanded(
+            child: OutlinedButton.icon(
               onPressed: () {
-                _showTemplateSelector(context, workoutProvider);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TemplatePickerScreen(),
+                  ),
+                );
               },
-              icon: const Icon(Icons.list_alt, size: 28),
-              label: const Text(
-                'Start from Template',
-                style: TextStyle(fontSize: 18),
-              ),
-              style:  ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              icon: const Icon(Icons.list_alt),
+              label: const Text('Templates'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets. symmetric(vertical: AppSpacing. md),
               ),
             ),
           ),
-        
-        if (hasTemplates) const SizedBox(height: AppSpacing.md),
-
-        // Start Empty Workout
-        SizedBox(
-          width: double.infinity,
-          child: hasTemplates
-              ? OutlinedButton.icon(
-                  onPressed: () {
-                    _startEmptyWorkout(context);
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Start Empty Workout'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          const SizedBox(width: AppSpacing. sm),
+          Expanded(
+            child: OutlinedButton. icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:  (context) => const WorkoutHistoryScreen(),
                   ),
-                )
-              : ElevatedButton.icon(
-                  onPressed: () {
-                    _startEmptyWorkout(context);
-                  },
-                  icon:  const Icon(Icons.add, size: 28),
-                  label: const Text(
-                    'Start Empty Workout',
-                    style: TextStyle(fontSize:  18),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  ),
-                ),
-        ),
-        
-        const SizedBox(height:  AppSpacing.md),
-
-        // Other Actions Row
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TemplatePickerScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.list_alt),
-                label: const Text('Templates'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                ),
+                );
+              },
+              icon: const Icon(Icons.history),
+              label: const Text('History'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:  (context) => const WorkoutHistoryScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.history),
-                label: const Text('History'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets. symmetric(vertical: AppSpacing. md),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+          ),
+        ],
+      ),
+    ],
+  );
+}
 
   void _startEmptyWorkout(BuildContext context) {
     final emptyWorkout = Workout(
@@ -190,36 +201,50 @@ class WorkoutListScreen extends StatelessWidget {
   }
 
   void _showTemplateSelector(BuildContext context, WorkoutProvider workoutProvider) {
-    showModalBottomSheet(
-      context:  context,
-      builder: (context) => Container(
-        padding: const EdgeInsets. all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Choose Template', style: AppTextStyles. h2()),
-            const SizedBox(height: AppSpacing.lg),
-            Flexible(
-              child: ListView. builder(
-                shrinkWrap: true,
-                itemCount:  workoutProvider.templates.length,
-                itemBuilder: (context, index) {
-                  final template = workoutProvider.templates[index];
-                  return ListTile(
+  showModalBottomSheet(
+    context:  context,
+    builder: (context) => Container(
+      padding:  const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Choose Template', style: AppTextStyles.h2()),
+          const SizedBox(height: AppSpacing.lg),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: workoutProvider.templates.length,
+              itemBuilder: (context, index) {
+                final template = workoutProvider.templates[index];
+                return SwipeToDelete(
+                  confirmationTitle: 'Delete Template',
+                  confirmationMessage: 'Delete "${template.name}"? ',
+                  onDelete: () {
+                    workoutProvider. deleteTemplate(template.id);
+                    Navigator.pop(context); // Close bottom sheet
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${template. name} deleted'),
+                        backgroundColor: AppColors.error,
+                        duration: const Duration(seconds:  2),
+                      ),
+                    );
+                  },
+                  child: ListTile(
                     leading:  Container(
                       padding: const EdgeInsets.all(AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: template.muscleGroups.isNotEmpty
-                            ? AppColors.getMuscleGroupColor(template.muscleGroups.first)
+                            ?  AppColors.getMuscleGroupColor(template.muscleGroups. first)
                                 .withOpacity(0.2)
-                            : AppColors. primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing. radiusSmall),
+                            : AppColors.primary.withOpacity(0.2),
+                        borderRadius: BorderRadius. circular(AppSpacing.radiusSmall),
                       ),
                       child: Icon(
                         Icons.list_alt,
-                        color: template. muscleGroups.isNotEmpty
+                        color: template.muscleGroups.isNotEmpty
                             ? AppColors.getMuscleGroupColor(template.muscleGroups.first)
-                            : AppColors.primary,
+                            :  AppColors.primary,
                       ),
                     ),
                     title: Text(template.name, style: AppTextStyles.h4()),
@@ -228,25 +253,26 @@ class WorkoutListScreen extends StatelessWidget {
                       style: AppTextStyles.caption(),
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap:  () {
+                    onTap: () {
                       final workout = workoutProvider.createWorkoutFromTemplate(template);
                       Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => WorkoutScreen(workout:  workout),
+                          builder:  (context) => WorkoutScreen(workout: workout),
                         ),
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmptyTemplates(BuildContext context) {
     return Container(
@@ -283,13 +309,26 @@ class WorkoutListScreen extends StatelessWidget {
   }
 
   Widget _buildTemplatesList(BuildContext context, List<Workout> templates, WorkoutProvider workoutProvider) {
-    return Column(
-      children: templates.map((template) {
-        return Card(
+  return Column(
+    children: templates.map((template) {
+      return SwipeToDelete(
+        confirmationTitle: 'Delete Template',
+        confirmationMessage: 'Delete "${template.name}"?',
+        onDelete: () {
+          workoutProvider.deleteTemplate(template.id);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${template.name} deleted'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        child: Card(
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets. all(AppSpacing.xs),
+            leading:  Container(
+              padding: const EdgeInsets.all(AppSpacing.xs),
               decoration: BoxDecoration(
                 color: template.muscleGroups.isNotEmpty
                     ? AppColors. getMuscleGroupColor(template. muscleGroups.first)
@@ -312,7 +351,7 @@ class WorkoutListScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               final workout = workoutProvider.createWorkoutFromTemplate(template);
-              Navigator.push(
+              Navigator. push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => WorkoutScreen(workout: workout),
@@ -320,8 +359,9 @@ class WorkoutListScreen extends StatelessWidget {
               );
             },
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    }).toList(),
+  );
+}
 }

@@ -15,6 +15,8 @@ import 'package:reprise/shared/models/workout.dart';
 import 'package:reprise/services/local_storage_service.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
+import 'package:reprise/features/workout/screens/workout_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -583,78 +585,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildRecentActivityCard(BuildContext context, Workout workout, WorkoutProvider workoutProvider) {
-    final weightUnit = LocalStorageService.getSetting('weightUnit', defaultValue: 'lbs');
-    
-    final daysAgo = DateTime.now().difference(workout.date).inDays;
-    final dateText = daysAgo == 0 ? 'Today' : daysAgo == 1 ? 'Yesterday' : '$daysAgo days ago';
+  final weightUnit = LocalStorageService.getSetting('weightUnit', defaultValue: 'lbs');
+  final displayVolume = weightUnit == 'kg'
+      ? (workout.totalVolume * 0.453592).toInt()
+      : workout.totalVolume;
 
-    final displayVolume = weightUnit == 'kg'
-        ? (workout.totalVolume * 0.453592).toInt()
-        : workout.totalVolume;
+  final daysAgo = DateTime.now().difference(workout.date).inDays;
+  final dateText = daysAgo == 0
+      ? 'Today'
+      : daysAgo == 1
+          ? 'Yesterday'
+          :  DateFormat('MMM d').format(workout.date);
 
-    return Container(
+  return SwipeToDelete(
+    confirmationTitle: 'Delete Workout',
+    confirmationMessage: 'Are you sure you want to delete this workout?',
+    onDelete: () {
+      workoutProvider.deleteWorkout(workout. id, workout.date);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Workout deleted'),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    },
+    child: Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors. surfaceLight,
+      child: InkWell(
+        onTap: () {
+          Navigator. push(
+            context,
+            MaterialPageRoute(
+              builder:  (context) => WorkoutDetailScreen(workout: workout),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border(
-          left: BorderSide(
-            color: AppColors.getMuscleGroupColor(workout.muscleGroups.first),
-            width: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing. md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: workout.muscleGroups.isNotEmpty
+                      ? AppColors.getMuscleGroupColor(workout.muscleGroups.first)
+                          .withOpacity(0.2)
+                      : AppColors. primary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppSpacing. radiusSmall),
+                ),
+                child: Icon(
+                  Icons.fitness_center,
+                  color:  workout.muscleGroups.isNotEmpty
+                      ? AppColors.getMuscleGroupColor(workout.muscleGroups.first)
+                      : AppColors.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(workout.name, style: AppTextStyles.h4()),
+                    const SizedBox(height: 4),
+                    if (workout.status == WorkoutStatus.completed) ...[
+                      Text(
+                        '$displayVolume $weightUnit • ${workout. durationMinutes} min',
+                        style: AppTextStyles.caption(),
+                      ),
+                    ] else ...[
+                      Text(
+                        'Scheduled',
+                        style: AppTextStyles.caption(color: AppColors. warning),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      dateText,
+                      style: AppTextStyles.caption(),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondaryLight),
+            ],
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children:  [
-              Expanded(child: Text(workout.name, style: AppTextStyles.h3())),
-              Text(dateText, style: AppTextStyles. caption()),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: AppColors.error,
-                onPressed: () {
-                  _showDeleteConfirmation(context, workout, workoutProvider);
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            children: workout.muscleGroups
-                .map((group) => Chip(
-                      label: Text(group, style: AppTextStyles.caption(color: Colors.white)),
-                      backgroundColor: AppColors.getMuscleGroupColor(group),
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ))
-                .toList(),
-          ),
-          if (workout.status == WorkoutStatus.completed) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                const Icon(Icons.fitness_center, size: 16, color: AppColors.textSecondaryLight),
-                const SizedBox(width: AppSpacing.xs),
-                Text('$displayVolume $weightUnit', style: AppTextStyles.bodySmall()),
-                const SizedBox(width: AppSpacing.md),
-                const Icon(Icons.access_time, size: 16, color: AppColors.textSecondaryLight),
-                const SizedBox(width: AppSpacing. xs),
-                Text('${workout. durationMinutes} min', style:  AppTextStyles.bodySmall()),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+    ),
+  );
+}
 
   void _showDeleteConfirmation(BuildContext context, Workout workout, WorkoutProvider workoutProvider) {
     showDialog(

@@ -5,6 +5,7 @@ import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/services/local_storage_service.dart';
 import 'package:reprise/features/measurements/screens/measurement_analytics_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:reprise/shared/widgets/swipe_to_delete.dart';
 
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});
@@ -133,16 +134,32 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   }
 
   Widget _buildMeasurementCard(Measurement measurement, int index) {
-    return Card(
+  return SwipeToDelete(
+    confirmationTitle: 'Delete Measurement',
+    confirmationMessage: 'Delete measurement from ${DateFormat('MMM d, yyyy').format(measurement.date)}?',
+    onDelete: () {
+      setState(() {
+        _measurements.removeAt(index);
+        _saveMeasurements();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Measurement deleted'),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    },
+    child: Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Padding(
+      child:  Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children:  [
                 Text(
                   DateFormat('MMM d, yyyy').format(measurement.date),
                   style: AppTextStyles.h3(),
@@ -157,16 +174,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       tooltip: 'Edit',
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      color: AppColors.error,
-                      onPressed: () => _showDeleteConfirmation(measurement, index),
-                      padding: EdgeInsets. zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: 'Delete',
-                    ),
+                    ),                  
                   ],
                 ),
               ],
@@ -177,7 +185,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             const SizedBox(height: AppSpacing.sm),
             _buildMeasurementRow('Weight', '${_convertWeight(measurement.weight).toStringAsFixed(1)} ${_getWeightUnit()}'),
             if (measurement.bodyFat != null)
-              _buildMeasurementRow('Body Fat', '${measurement.bodyFat}%'),
+              _buildMeasurementRow('Body Fat', '${measurement. bodyFat}%'),
             if (measurement. muscleMass != null)
               _buildMeasurementRow('Muscle Mass', '${measurement.muscleMass}%'),
             if (measurement.bmi != null)
@@ -202,39 +210,39 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             ],
 
             if (_hasArms(measurement)) ...[
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height:  AppSpacing.md),
               const Divider(),
               const SizedBox(height: AppSpacing.sm),
-              Text('Arms', style: AppTextStyles.h4()),
-              const SizedBox(height: AppSpacing.sm),
-              if (measurement.leftArm != null)
-                _buildMeasurementRow('Left Arm', '${measurement.leftArm} in'),
+              Text('Arms', style: AppTextStyles. h4()),
+              const SizedBox(height: AppSpacing. sm),
+              if (measurement. leftArm != null)
+                _buildMeasurementRow('Left Arm', '${measurement. leftArm} in'),
               if (measurement.rightArm != null)
                 _buildMeasurementRow('Right Arm', '${measurement.rightArm} in'),
-              if (measurement.leftForearm != null)
+              if (measurement. leftForearm != null)
                 _buildMeasurementRow('Left Forearm', '${measurement.leftForearm} in'),
               if (measurement.rightForearm != null)
-                _buildMeasurementRow('Right Forearm', '${measurement. rightForearm} in'),
+                _buildMeasurementRow('Right Forearm', '${measurement.rightForearm} in'),
             ],
 
             if (_hasLegs(measurement)) ...[
               const SizedBox(height: AppSpacing.md),
               const Divider(),
-              const SizedBox(height: AppSpacing.sm),
-              Text('Legs', style: AppTextStyles. h4()),
               const SizedBox(height: AppSpacing. sm),
-              if (measurement. leftThigh != null)
-                _buildMeasurementRow('Left Thigh', '${measurement.leftThigh} in'),
+              Text('Legs', style: AppTextStyles.h4()),
+              const SizedBox(height: AppSpacing.sm),
+              if (measurement.leftThigh != null)
+                _buildMeasurementRow('Left Thigh', '${measurement. leftThigh} in'),
               if (measurement.rightThigh != null)
                 _buildMeasurementRow('Right Thigh', '${measurement.rightThigh} in'),
-              if (measurement. leftCalf != null)
+              if (measurement.leftCalf != null)
                 _buildMeasurementRow('Left Calf', '${measurement.leftCalf} in'),
               if (measurement.rightCalf != null)
                 _buildMeasurementRow('Right Calf', '${measurement.rightCalf} in'),
             ],
 
             if (measurement.notes != null && measurement.notes!.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing. md),
               const Divider(),
               const SizedBox(height: AppSpacing.sm),
               Text('Notes:', style: AppTextStyles.caption()),
@@ -243,8 +251,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showDeleteConfirmation(Measurement measurement, int index) {
     showDialog(

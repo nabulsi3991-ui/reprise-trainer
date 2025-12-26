@@ -4,7 +4,7 @@ import 'package:reprise/core/constants/app_colors.dart';
 class SwipeToDelete extends StatelessWidget {
   final Widget child;
   final VoidCallback onDelete;
-  final String? confirmationTitle;
+  final String?  confirmationTitle;
   final String? confirmationMessage;
   final bool requireConfirmation;
 
@@ -48,7 +48,7 @@ class SwipeToDelete extends StatelessWidget {
           ),
         );
       },
-      onDismissed: (direction) {
+      onDismissed:  (direction) {
         onDelete();
       },
       background: Container(
@@ -56,7 +56,7 @@ class SwipeToDelete extends StatelessWidget {
         padding: const EdgeInsets. only(right: 20),
         decoration: BoxDecoration(
           color: AppColors.error,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius. circular(12),
         ),
         child: const Icon(
           Icons.delete,
