@@ -1,0 +1,28 @@
+﻿# Build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Android
+android/.gradle/
+android/gradle/
+android/.idea/
+android/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/captures/
+*.jks
+*.keystore
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+build/
+. dart_tool/
+build/
+.dart_tool/

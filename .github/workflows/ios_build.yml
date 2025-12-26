@@ -1,0 +1,58 @@
+name: iOS Build
+
+on:  
+  push:
+    branches:  [ main ]
+  workflow_dispatch:  
+
+jobs:
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '3.19.0'
+    
+    - name: Flutter doctor
+      run: flutter doctor -v
+    
+    - name:  Install dependencies
+      run: flutter pub get
+    
+    - name: Clean build
+      run: flutter clean
+    
+    - name: Build iOS (No Codesign)
+      run: flutter build ios --release --no-codesign
+    
+    - name: Create IPA
+      run: |
+        cd build/ios/iphoneos
+        mkdir Payload
+        cp -r Runner.app Payload/
+        zip -r ../../../reprise.ipa Payload
+    
+    - name: Upload IPA Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-app
+        path: reprise.ipa
+        retention-days: 7
+    
+    - name: Upload Build Info
+      run: |
+        echo "Build completed at:  $(date)" > build-info.txt
+        echo "Flutter version: $(flutter --version)" >> build-info.txt
+    
+    - name: Upload Build Info Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-info
+        path: build-info. txt
