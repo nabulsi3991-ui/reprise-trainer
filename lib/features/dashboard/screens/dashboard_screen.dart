@@ -476,51 +476,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 Widget _buildUnifiedHeaderCard(dynamic user) {
-    return Card(
-      elevation: 4,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: AppThemeManager.primaryGradient,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing. md),
-                decoration: BoxDecoration(
-                  color:  Colors.white. withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  AppThemeManager.modeIcon,
-                  size: 32,
-                  color: Colors. white,
-                ),
+  return Card(
+    elevation: 4,
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: AppThemeManager.primaryGradient,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets. all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back,',
-                      style: AppTextStyles.caption(color: Colors.white. withOpacity(0.9)),
-                    ),
-                    Text(
-                      user.name,
-                      style: AppTextStyles.h2(color: Colors. white),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                AppThemeManager.modeIcon,
+                size: 32,
+                color: Colors.white, // ✅ Icon stays white (looks good on gradient)
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width:  AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome back,',
+                    style: AppTextStyles.caption(color: Colors.white), // ✅ This is fine - subtitle
+                  ),
+                  Text(
+                    user.name,
+                    style: AppTextStyles.h2(color: Colors. white), // ✅ This is fine - name on gradient
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Unified start workout button
   Widget _buildUnifiedStartWorkoutButton(BuildContext context) {
@@ -1308,45 +1308,45 @@ Widget _buildTrainerNextWorkoutCard(BuildContext context, Workout?  nextWorkout,
   }
 
   Widget _buildTrainerStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing. sm),
-                decoration: BoxDecoration(
-                  color: color. withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 32),
+  required IconData icon,
+  required String label,
+  required String value,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+    child: Card(
+      child: Padding(
+        padding:  const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
               ),
-              const SizedBox(height: AppSpacing. sm),
-              Text(
-                value,
-                style: AppTextStyles.h1(color: color),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                style: AppTextStyles.caption(),
-              ),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              value,
+              style: AppTextStyles.h2(color: AppColors.textPrimary), // ✅ BLACK
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              label,
+              style: AppTextStyles.caption(color: AppColors.textSecondary), // ✅ GRAY
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmptyTraineesCard(dynamic user) {
     return Card(
@@ -2777,40 +2777,42 @@ void _startAssignedWorkout(AssignedWorkout assignedData) {
   }
 
   Widget _buildStatCard({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-  }) {
-    return Container(
+  required IconData icon,
+  required Color iconColor,
+  required String label,
+  required String value,
+}) {
+  return Card(
+    elevation: 2,
+    child: Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors. surfaceLight,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing. sm),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+            ),
+            child: Icon(icon, color: iconColor, size: 24),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            style: AppTextStyles.h3(color: AppColors.textPrimary), // ✅ BLACK
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            label,
+            style:  AppTextStyles.caption(color: AppColors.textSecondary), // ✅ GRAY
+            textAlign: TextAlign.center,
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Icon(icon, color: iconColor, size: AppSpacing.iconLarge),
-          const SizedBox(height: AppSpacing.sm),
-          Text(value, style: AppTextStyles.h3()),
-          const SizedBox(height: AppSpacing.xs),
-          Text(label, style:  AppTextStyles.caption()),
-        ],
-      ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildNextWorkoutCard(BuildContext context, Workout?  nextWorkout, WorkoutProvider workoutProvider) {
   if (nextWorkout == null) {
     return Container(

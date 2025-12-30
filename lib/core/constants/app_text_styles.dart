@@ -20,7 +20,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 32,
       fontWeight: fontWeight ?? FontWeight.bold,
-      color: color ?? AppColors.textPrimaryLight,
+      color: color ?? AppColors.textPrimary, 
       height: 1.2,
     );
   }
@@ -29,7 +29,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 24,
       fontWeight: fontWeight ?? FontWeight. bold,
-      color: color ?? AppColors.textPrimaryLight,
+      color: color ?? AppColors.textPrimary, 
       height: 1.3,
     );
   }
@@ -38,7 +38,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 20,
       fontWeight: fontWeight ?? FontWeight. w600,
-      color: color ??  AppColors.textPrimaryLight,
+      color: color ??  AppColors.textPrimary,
       height: 1.4,
     );
   }
@@ -48,7 +48,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 16,
       fontWeight: fontWeight ?? FontWeight.normal,
-      color: color ?? AppColors.textPrimaryLight,
+      color: color ??  AppColors.textPrimary,
       height: 1.5,
     );
   }
@@ -57,7 +57,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 14,
       fontWeight: fontWeight ?? FontWeight.normal,
-      color: color ?? AppColors.textSecondaryLight,
+      color: color ??  AppColors.textPrimary,
       height:  1.5,
     );
   }
@@ -66,7 +66,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 12,
       fontWeight: fontWeight ?? FontWeight. normal,
-      color: color ?? AppColors.textSecondaryLight,
+      color: color ??  AppColors.textPrimary,
       height: 1.4,
     );
   }
@@ -76,7 +76,7 @@ class AppTextStyles {
     return GoogleFonts.robotoMono(
       fontSize: 24,
       fontWeight: fontWeight ?? FontWeight.bold,
-      color: color ?? AppColors.textPrimaryLight,
+      color: color ??  AppColors.textPrimary,
     );
   }
   
@@ -84,7 +84,7 @@ class AppTextStyles {
     return GoogleFonts.robotoMono(
       fontSize: 18,
       fontWeight: fontWeight ?? FontWeight.w600,
-      color: color ?? AppColors. textPrimaryLight,
+      color: color ??  AppColors.textPrimary,
     );
   }
   
@@ -93,7 +93,7 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 16,
       fontWeight: FontWeight.w600,
-      color: color ?? Colors.white,
+      color: color ??  AppColors.textPrimary,
       letterSpacing: 0.5,
     );
   }
