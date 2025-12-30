@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reprise/core/constants/app_colors.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 import 'package:reprise/core/constants/app_text_styles.dart';
 import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/features/workout/screens/workout_screen.dart';
@@ -88,7 +89,7 @@ class WorkoutListScreen extends StatelessWidget {
                   duration: const Duration(seconds: 2),
                   action: SnackBarAction(
                     label: 'Create',
-                    textColor: Colors.white,
+                    textColor: const Color.fromARGB(255, 0, 0, 0),
                     onPressed: () {
                       // Navigate to template creation
                       Navigator.push(
@@ -103,16 +104,17 @@ class WorkoutListScreen extends StatelessWidget {
               );
             }
           },
-          icon:  Icon(Icons.list_alt, size: 28, color: hasTemplates ? Colors.white : AppColors.textSecondaryLight),
-          label: Text(
-            'Start from Template',
-            style:  TextStyle(
-              fontSize: 18,
-              color: hasTemplates ? Colors.white : AppColors.textSecondaryLight,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: hasTemplates ? AppColors.primary : AppColors.surfaceLight,
+          icon: Icon(Icons.list_alt, size: 28, color: hasTemplates ? Colors. white : AppColors.textSecondaryLight),
+label: Text(
+  'Start from Template',
+  style: TextStyle(
+    fontSize: 18,
+    color: hasTemplates ? Colors.white : AppColors.textSecondaryLight,
+  ),
+),
+style: ElevatedButton.styleFrom(
+  backgroundColor: hasTemplates ? AppThemeManager.primaryColor : AppColors.surfaceLight, // ✅ Dynamic
+
             foregroundColor: hasTemplates ? Colors.white : AppColors.textSecondaryLight,
             padding:  const EdgeInsets.symmetric(vertical: AppSpacing.lg),
           ),

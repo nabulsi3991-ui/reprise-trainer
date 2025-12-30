@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:reprise/core/constants/app_colors.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 import 'package:reprise/core/constants/app_text_styles.dart';
 import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/features/workout/providers/assigned_workout_provider.dart';
@@ -128,7 +129,7 @@ void initState() {
                 icon: const Icon(Icons.add),
                 label: const Text('Assign Workout'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
+                  backgroundColor: AppThemeManager.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 ),
               ),

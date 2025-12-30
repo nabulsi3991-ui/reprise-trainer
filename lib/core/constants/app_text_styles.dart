@@ -5,7 +5,7 @@ import 'app_colors.dart';
 class AppTextStyles {
   // Headings
  static TextStyle h4({
-  Color color = AppColors.textPrimaryLight,
+  Color color = AppColors.textPrimary,
   FontWeight?  fontWeight,
 }) {
   return TextStyle(

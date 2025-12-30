@@ -5,6 +5,7 @@ import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/shared/models/exercise_library.dart';
 import 'package:reprise/features/workout/screens/custom_exercise_screen.dart';
 import 'package:reprise/shared/widgets/swipe_to_delete.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 
 class ExerciseSelectorScreen extends StatefulWidget {
   const ExerciseSelectorScreen({super.key});
@@ -108,7 +109,7 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                   ? 'Create Custom Exercise ($customCount saved)'
                   : 'Create Custom Exercise'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondary,
+                backgroundColor: AppThemeManager.secondaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               ),
@@ -166,9 +167,9 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                           backgroundColor:  AppColors.surfaceLight,
                           selectedColor: AppColors.primary,
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          ),
+                          color: isSelected ?  Colors.white : AppColors.textPrimary, // ✅ Black when not selected
+                          fontWeight: isSelected ? FontWeight.w600 :  FontWeight.normal,
+                        ),
                         ),
                       );
                     },
@@ -200,11 +201,11 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                             });
                           },
                           backgroundColor:  AppColors.surfaceLight,
-                          selectedColor: AppColors. secondary,
+                          selectedColor: AppThemeManager.secondaryColor,
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          ),
+  color: isSelected ? Colors.white : AppColors.textPrimary, // ✅ Black when not selected
+  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+),
                         ),
                       );
                     },

@@ -9,6 +9,7 @@ import 'package:reprise/shared/models/workout.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:reprise/shared/widgets/swipe_to_delete.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 
 class TemplatePickerScreen extends StatelessWidget {
   final bool isScheduling;
@@ -72,6 +73,49 @@ class TemplatePickerScreen extends StatelessWidget {
                       style: AppTextStyles.bodySmall(color: AppColors.textSecondaryLight),
                       textAlign:  TextAlign.center,
                     ),
+                              const SizedBox(height: AppSpacing. lg),
+          // ✅ ADD THIS BUTTON: 
+          ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WorkoutScreen(
+                    workout:  Workout(
+                      id:  '',
+                      name: 'New Template',
+                      date:  DateTime.now(),
+                      muscleGroups: [],
+                      status: WorkoutStatus.scheduled,
+                      exercises: [],
+                    ),
+                    isTemplate:  true,
+                  ),
+                ),
+              );
+              
+              // ✅ If scheduling and template was created, stay on this screen
+              if (result != null && isScheduling && context.mounted) {
+                // The screen will rebuild automatically via Consumer
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Template created!  Select it to schedule. '),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Create Template'),
+            style: ElevatedButton. styleFrom(
+              backgroundColor: AppThemeManager.primaryColor, // ✅ Dynamic
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
+            ),
+          ),
+
                   ],
                 ),
               ),
@@ -88,31 +132,31 @@ class TemplatePickerScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: ! isScheduling && !isPastWorkout // UPDATED
-          ? FloatingActionButton. extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:  (context) => WorkoutScreen(
-                      workout: Workout(
-                        id: '',
-                        name: 'New Template',
-                        date: DateTime.now(),
-                        muscleGroups: [],
-                        status: WorkoutStatus.scheduled,
-                        exercises: [],
-                      ),
-                      isTemplate: true,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('New Template'),
-              backgroundColor: AppColors.primary,
-            )
-          : null,
+      floatingActionButton: ! isScheduling && !isPastWorkout
+    ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WorkoutScreen(
+                workout:  Workout(
+                  id: '',
+                  name: 'New Template',
+                  date: DateTime.now(),
+                  muscleGroups: [],
+                  status: WorkoutStatus.scheduled,
+                  exercises: [],
+                ),
+                isTemplate: true,
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New Template'),
+        backgroundColor: AppThemeManager.primaryColor, // ✅ Dynamic
+      )
+    : null,
     );
   }
 
@@ -201,7 +245,7 @@ class TemplatePickerScreen extends StatelessWidget {
                     return Chip(
                       label:  Text(
                         group,
-                        style: AppTextStyles. caption(color: Colors.white),
+                        style: AppTextStyles.caption(color: Colors.white),
                       ),
                       backgroundColor: AppColors.getMuscleGroupColor(group),
                       visualDensity: VisualDensity.compact,
@@ -260,6 +304,7 @@ class TemplatePickerScreen extends StatelessWidget {
       id: const Uuid().v4(),
       date: scheduleDate ?? DateTime.now(),
       status: WorkoutStatus.scheduled,
+      isAssignedWorkout: false,
     );
 
     workoutProvider.addScheduledWorkout(scheduledWorkout);
@@ -447,6 +492,7 @@ void _logPastWorkout(
           id: const Uuid().v4(),
           date: selectedDate,
           status: WorkoutStatus.scheduled,
+          isAssignedWorkout: false,
         );
 
         workoutProvider.addScheduledWorkout(scheduledWorkout);

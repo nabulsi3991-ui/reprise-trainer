@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reprise/core/constants/app_colors.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 import 'package:reprise/core/constants/app_text_styles.dart';
 import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/shared/models/workout.dart';
@@ -1626,13 +1627,13 @@ void _showDurationInputDialog() {
             icon: const Icon(Icons. timer_outlined),
             onPressed: _showDurationInputDialog,
             tooltip: 'Change Duration',
-            color: _manualDurationMinutes > 0 ? AppColors.primary : null,
+            color: _manualDurationMinutes > 0 ? AppThemeManager.primaryColor : null,
           ),
         
         IconButton(
           icon: Icon(
             _currentWorkout.notes != null ?  Icons.note :  Icons.note_outlined,
-            color: _currentWorkout.notes != null ? AppColors.primary :  null,
+            color: _currentWorkout.notes != null ?  AppThemeManager.primaryColor :   null,
           ),
           onPressed: _addWorkoutNotes,
           tooltip: 'Add Notes',
@@ -1643,6 +1644,7 @@ void _showDurationInputDialog() {
             icon: const Icon(Icons.save),
             onPressed: _saveAsTemplate,
             tooltip: 'Save as Template',
+            color:  AppThemeManager.primaryColor, 
           ),
         
         if (! _isEditingTemplate && _currentWorkout.exercises.isNotEmpty)
@@ -1650,6 +1652,7 @@ void _showDurationInputDialog() {
             icon: const Icon(Icons.check),
             onPressed: _showFinishWorkoutDialog,
             tooltip: 'Finish Workout',
+            color:  AppThemeManager.primaryColor, 
           ),
       ],
     ),
@@ -1675,14 +1678,14 @@ void _showDurationInputDialog() {
         ),
       ],
     ),
-    floatingActionButton: _isNavigating 
-        ? null 
-        : FloatingActionButton. extended(
-            onPressed: _addExercise,
-            icon:  const Icon(Icons.add),
-            label: const Text('Add Exercise'),
-            backgroundColor: AppColors.primary,
-          ),
+    floatingActionButton:  _isNavigating 
+    ? null 
+    : FloatingActionButton.extended(
+        onPressed: _addExercise,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Exercise'),
+        backgroundColor: AppThemeManager.primaryColor, // ✅ Dynamic
+      ),
   ),
 );
   }
@@ -1854,7 +1857,7 @@ void _showDurationInputDialog() {
                   icon: const Icon(Icons.add, size: 18),
                   label: Text('Add Set (${exercise.sets.length + 1})'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                    foregroundColor: AppThemeManager.primaryColor,
                   ),
                 ),
                 if (exercise.sets.length > 1) ...[
