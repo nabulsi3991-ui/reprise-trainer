@@ -15,6 +15,7 @@ import 'package:reprise/services/local_storage_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:reprise/services/workout_notification_service.dart';
 import 'package:reprise/shared/widgets/swipe_to_delete.dart';
+import 'package:reprise/features/workout/providers/assigned_workout_provider.dart';
 
 
 class WorkoutScreen extends StatefulWidget {
@@ -1298,6 +1299,10 @@ void _showDurationInputDialog() {
 
 
   void _finishWorkout() {
+    if (widget.workout?.isAssignedWorkout == true && widget.workout?. assignedWorkoutData != null) {
+    final assignedProvider = Provider.of<AssignedWorkoutProvider>(context, listen: false);
+    assignedProvider.completeAssignedWorkout(widget.workout!.id);
+  }
   WorkoutNotificationService.cancelWorkoutNotification(); 
 
   final weightUnit = LocalStorageService.getSetting('weightUnit', defaultValue: 'lbs');

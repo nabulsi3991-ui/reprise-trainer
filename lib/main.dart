@@ -2,29 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:reprise/core/constants/app_colors.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart'; // ✅ NEW
 import 'package:reprise/features/workout/providers/workout_provider.dart';
-import 'package:reprise/shared//widgets/main_navigation.dart';
+import 'package:reprise/features/user/providers/user_provider.dart';
+import 'package:reprise/features/auth/screens/auth_gate.dart';
 import 'package:reprise/shared/models/exercise_library.dart';
 import 'package:reprise/services/workout_notification_service.dart';
+import 'package:reprise/features/workout/providers/assigned_workout_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding. ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Firebase.initializeApp();
   
   await Hive.initFlutter();
   await Hive.openBox('workouts');
   await Hive.openBox('settings');
-  await WorkoutNotificationService.initialize();
+  await WorkoutNotificationService. initialize();
 
   // Load custom exercises
-  ExerciseLibrary.loadCustomExercises();
+  ExerciseLibrary. loadCustomExercises();
   
-  SystemChrome. setSystemUIOverlayStyle(
+  SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:  Brightness.dark,
+      statusBarIconBrightness: Brightness. dark,
       systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness. dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
   
@@ -36,14 +42,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => WorkoutProvider(),
-      child: const _AppWithLifecycle(),  // ✅ CHANGED:  Wrap with lifecycle observer
+    return MultiProvider(
+      providers:  [
+        ChangeNotifierProvider(create: (context) => WorkoutProvider()),
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => AssignedWorkoutProvider()),
+      ],
+      child: const _AppWithLifecycle(),
     );
   }
 }
 
-// ✅ ADD THIS NEW CLASS
 class _AppWithLifecycle extends StatefulWidget {
   const _AppWithLifecycle();
 
@@ -60,7 +69,7 @@ class _AppWithLifecycleState extends State<_AppWithLifecycle> with WidgetsBindin
 
   @override
   void dispose() {
-    WidgetsBinding. instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -68,21 +77,19 @@ class _AppWithLifecycleState extends State<_AppWithLifecycle> with WidgetsBindin
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     
-    print('🔔 [GLOBAL] App state changed:  $state');
+    print('🔔 [GLOBAL] App state changed: $state');
     
-    final workoutProvider = Provider.of<WorkoutProvider>(context, listen:  false);
+    final workoutProvider = Provider.of<WorkoutProvider>(context, listen: false);
     final hasActiveWorkout = workoutProvider.activeWorkout != null;
     
     if (state == AppLifecycleState.resumed) {
-      // App came back to foreground - cancel notification
       print('🔔 [GLOBAL] App resumed - cancelling notification');
       WorkoutNotificationService.cancelWorkoutNotification();
-    } else if (state == AppLifecycleState.paused) {
-      // App went to background - show notification if workout active
+    } else if (state == AppLifecycleState. paused) {
       print('🔔 [GLOBAL] App paused - checking for active workout');
       
       if (hasActiveWorkout) {
-        final activeWorkout = workoutProvider.activeWorkout! ;
+        final activeWorkout = workoutProvider. activeWorkout! ;
         final startTime = workoutProvider.activeWorkoutStartTime;
         
         if (startTime != null) {
@@ -94,12 +101,12 @@ class _AppWithLifecycleState extends State<_AppWithLifecycle> with WidgetsBindin
               .expand((e) => e.sets)
               .length;
           
-          print('🔔 [GLOBAL] Showing notification: ${activeWorkout.name}');
+          print('🔔 [GLOBAL] Showing notification:  ${activeWorkout.name}');
           
-          WorkoutNotificationService. showActiveWorkoutNotification(
+          WorkoutNotificationService.showActiveWorkoutNotification(
             workoutName: activeWorkout.name,
             startTime: startTime,
-            sets:  '$completedSets/$totalSets sets',
+            sets: '$completedSets/$totalSets sets',
           );
         } else {
           print('🔔 [GLOBAL] Active workout found but no start time');
@@ -112,97 +119,153 @@ class _AppWithLifecycleState extends State<_AppWithLifecycle> with WidgetsBindin
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'RepRise',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme:  ColorScheme.fromSeed(
-          seedColor: AppColors. primary,
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: Colors. white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-          iconTheme: IconThemeData(color: AppColors.textPrimaryLight),
-          titleTextStyle:  TextStyle(
-            color: AppColors.textPrimaryLight,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme:  ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 2,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical:  12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton. styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical:  12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.surfaceLight,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius. circular(8),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.error, width: 1),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: AppColors.surfaceLight,
-          selectedColor: AppColors.primary,
-          labelStyle: const TextStyle(fontSize: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        dividerColor: AppColors. textSecondaryLight.withOpacity(0.2),
+    // ✅ Listen to user changes and update theme
+    return Consumer<UserProvider>(
+      builder:  (context, userProvider, child) {
+        // ✅ Set theme mode based on user type
+        final isTrainer = userProvider.currentUser?. isTrainer ?? false;
+        AppThemeManager.setTrainerMode(isTrainer);
+        
+        return MaterialApp(
+          title: 'RepRise',
+          debugShowCheckedModeBanner: false,
+          theme: _buildThemeData(), // ✅ Use dynamic theme
+          home: const AuthGate(),
+        );
+      },
+    );
+  }
+
+  // ✅ Dynamic theme builder
+  ThemeData _buildThemeData() {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme. fromSeed(
+        seedColor: AppThemeManager.primaryColor, // ✅ Dynamic
+        secondary: AppThemeManager.secondaryColor, // ✅ Dynamic
+        brightness: Brightness.light,
       ),
-      home: const MainNavigation(),
+      scaffoldBackgroundColor: Colors.white,
+          textTheme: const TextTheme(
+      displayLarge: TextStyle(color:  AppColors.textPrimary),
+      displayMedium: TextStyle(color: AppColors.textPrimary),
+      displaySmall: TextStyle(color: AppColors.textPrimary),
+      headlineLarge: TextStyle(color: AppColors.textPrimary),
+      headlineMedium: TextStyle(color: AppColors.textPrimary),
+      headlineSmall: TextStyle(color: AppColors.textPrimary),
+      titleLarge: TextStyle(color: AppColors.textPrimary),
+      titleMedium: TextStyle(color: AppColors.textPrimary),
+      titleSmall: TextStyle(color: AppColors. textPrimary),
+      bodyLarge: TextStyle(color:  AppColors.textPrimary),
+      bodyMedium: TextStyle(color: AppColors.textPrimary),
+      bodySmall: TextStyle(color: AppColors.textPrimary),
+      labelLarge: TextStyle(color: AppColors.textPrimary),
+      labelMedium: TextStyle(color: AppColors.textPrimary),
+      labelSmall: TextStyle(color: AppColors.textPrimary),
+    ),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors. white,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle:  TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppThemeManager.primaryColor, // ✅ Dynamic
+        foregroundColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppThemeManager. primaryColor, // ✅ Dynamic
+          foregroundColor: Colors.white,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppThemeManager.primaryColor, // ✅ Dynamic
+          side: BorderSide(color: AppThemeManager.primaryColor), // ✅ Dynamic
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor:  AppThemeManager.primaryColor, // ✅ Dynamic
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical:  8),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surfaceLight,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius. circular(8),
+          borderSide: BorderSide(
+            color: AppThemeManager. primaryColor, // ✅ Dynamic
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.error, width: 1),
+        ),
+        labelStyle: TextStyle(color: AppColors.textSecondary),
+      hintStyle: TextStyle(color:  AppColors.textSecondary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        selectedColor: AppThemeManager.primaryColor, // ✅ Dynamic
+        labelStyle: TextStyle(fontSize: 12, color: AppThemeManager.primaryColor),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      dividerColor: AppColors.textSecondaryLight. withOpacity(0.2),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppThemeManager.primaryColor, // ✅ Dynamic
+      ),
+          bottomNavigationBarTheme:  BottomNavigationBarThemeData(
+      selectedItemColor: AppThemeManager. primaryColor,
+      unselectedItemColor: AppColors.textSecondary, // ✅ Gray, not red
+      type: BottomNavigationBarType.fixed,
+      selectedLabelStyle: const TextStyle(color: AppColors. textPrimary),
+      unselectedLabelStyle: const TextStyle(color: AppColors.textSecondary),
+    ),
+    
+    // ✅ FIX: List tile text
+    listTileTheme: const ListTileThemeData(
+      textColor: AppColors.textPrimary,
+      iconColor: AppColors.textPrimary,
+    ),
+
     );
   }
 }

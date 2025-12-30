@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reprise/core/constants/app_colors.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart'; // ✅ NEW
 import 'package:reprise/features/dashboard/screens/dashboard_screen.dart';
 import 'package:reprise/features/calendar/screens/calendar_screen.dart';
 import 'package:reprise/features/workout/screens/workout_list_screen.dart';
@@ -42,8 +43,8 @@ class _MainNavigationState extends State<MainNavigation> {
               });
             },
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor:  AppColors.textSecondaryLight,
+            selectedItemColor: AppThemeManager.primaryColor,
+            unselectedItemColor:  Colors.grey.shade600,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),

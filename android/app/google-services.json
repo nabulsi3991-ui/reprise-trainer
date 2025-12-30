@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "786659581442",
+    "project_id": "reprise-ecf83",
+    "storage_bucket": "reprise-ecf83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786659581442:android:0099b3cd0295208f2f511b",
+        "android_client_info": {
+          "package_name": "com.example.reprise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDra-P2OUMxlcEgEdRLEPVUy8ySf3gkE-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

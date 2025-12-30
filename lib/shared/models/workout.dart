@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reprise/shared/models/assigned_workout.dart';
 
 class Workout {
   final String id;
@@ -10,6 +11,8 @@ class Workout {
   final WorkoutStatus status;
   final List<Exercise> exercises;
   final String? notes;
+  final bool isAssignedWorkout; 
+  final AssignedWorkout?  assignedWorkoutData; 
 
   Workout({
     required this.id,
@@ -21,6 +24,8 @@ class Workout {
     this. status = WorkoutStatus.scheduled,
     this.exercises = const [],
     this.notes,
+    this.isAssignedWorkout = false, // ✅ ADD THIS
+    this.assignedWorkoutData,
   });
 
   // Convert to JSON for storage
@@ -35,6 +40,7 @@ class Workout {
       'status': status.toString(),
       'exercises': exercises. map((e) => e.toJson()).toList(),
       'notes': notes,
+      'isAssignedWorkout': isAssignedWorkout ?? false,
     };
   }
 
@@ -55,6 +61,7 @@ class Workout {
           ?  (json['exercises'] as List).map((e) => Exercise.fromJson(e)).toList()
           : [],
       notes: json['notes'],
+      isAssignedWorkout: json['isAssignedWorkout'] as bool?  ?? false,
     );
   }
 
@@ -69,6 +76,9 @@ class Workout {
     WorkoutStatus? status,
     List<Exercise>? exercises,
     String? notes,
+    bool? isAssignedWorkout, 
+    AssignedWorkout? assignedWorkoutData, 
+
   }) {
     return Workout(
       id: id ?? this.id,
@@ -80,6 +90,8 @@ class Workout {
       status: status ?? this.status,
       exercises: exercises ?? this.exercises,
       notes: notes ?? this.notes,
+      isAssignedWorkout:  isAssignedWorkout ?? this.isAssignedWorkout ??  false,
+      assignedWorkoutData: assignedWorkoutData ?? this.assignedWorkoutData, 
     );
   }
 }

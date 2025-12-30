@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:reprise/shared/models/workout.dart';
 import 'package:reprise/services/local_storage_service.dart';
 import 'package:uuid/uuid.dart';
+import 'package:reprise/shared/models/assigned_workout.dart';
 
 class WorkoutProvider extends ChangeNotifier {
   final Map<DateTime, List<Workout>> _workouts = {};
@@ -10,8 +11,8 @@ class WorkoutProvider extends ChangeNotifier {
   Workout? _activeWorkout;
   bool _isInitialized = false;
 
-  // ✅ NEW:  Track active workout state
-  DateTime?  _activeWorkoutStartTime;
+  // Track active workout state
+  DateTime? _activeWorkoutStartTime;
   int _activeWorkoutElapsedSeconds = 0;
   Timer? _activeWorkoutTimer;
 
@@ -24,9 +25,9 @@ class WorkoutProvider extends ChangeNotifier {
   List<Workout> get templates => _templates;
   Workout? get activeWorkout => _activeWorkout;
   int get activeWorkoutElapsedSeconds => _activeWorkoutElapsedSeconds;
-  
   DateTime? get activeWorkoutStartTime => _activeWorkoutStartTime;
-  // ✅ NEW: Start active workout timer
+  
+  // Start active workout timer
   void _startActiveWorkoutTimer() {
     _activeWorkoutTimer?.cancel();
     _activeWorkoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -38,46 +39,83 @@ class WorkoutProvider extends ChangeNotifier {
     });
   }
 
- // ✅ FIXED: Set active workout with proper start time preservation
-Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapsedSeconds}) async {
-  _activeWorkout = workout;
-  
-  // ✅ Use provided start time or calculate from elapsed seconds
-  if (startTime != null) {
-    _activeWorkoutStartTime = startTime;
-  } else if (elapsedSeconds != null) {
-    _activeWorkoutStartTime = DateTime.now().subtract(Duration(seconds: elapsedSeconds));
-  } else {
-    _activeWorkoutStartTime = DateTime.now();
+  // Set active workout with proper start time preservation
+  Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapsedSeconds}) async {
+    _activeWorkout = workout;
+    
+    // Use provided start time or calculate from elapsed seconds
+    if (startTime != null) {
+      _activeWorkoutStartTime = startTime;
+    } else if (elapsedSeconds != null) {
+      _activeWorkoutStartTime = DateTime.now().subtract(Duration(seconds: elapsedSeconds));
+    } else {
+      _activeWorkoutStartTime = DateTime.now();
+    }
+    
+    // Calculate elapsed time
+    final elapsed = DateTime.now().difference(_activeWorkoutStartTime!);
+    _activeWorkoutElapsedSeconds = elapsed.inSeconds;
+    
+    // Save to persistent storage
+    await LocalStorageService.saveSetting('activeWorkout', workout.toJson());
+    await LocalStorageService.saveSetting(
+      'activeWorkoutStartTime',
+      _activeWorkoutStartTime! .toIso8601String(),
+    );
+    
+    debugPrint('✅ Active workout set: ${workout.name}, Start time: $_activeWorkoutStartTime, Elapsed:  $_activeWorkoutElapsedSeconds seconds');
+    notifyListeners();
   }
-  
-  // Calculate elapsed time
-  final elapsed = DateTime.now().difference(_activeWorkoutStartTime! );
-  _activeWorkoutElapsedSeconds = elapsed.inSeconds;
-  
-  // Save to persistent storage
-  await LocalStorageService.saveSetting('activeWorkout', workout.toJson());
-  await LocalStorageService.saveSetting(
-    'activeWorkoutStartTime',
-    _activeWorkoutStartTime! .toIso8601String(),
-  );
-  
-  debugPrint('✅ Active workout set:  ${workout.name}, Start time: $_activeWorkoutStartTime, Elapsed: $_activeWorkoutElapsedSeconds seconds');
-  notifyListeners();
-}
 
-  // ✅ NEW: Update active workout (when sets are completed)
+  // Get workouts for a specific date including assigned workouts
+  List<Workout> getWorkoutsForDateWithAssigned(DateTime date, List<AssignedWorkout> assignedWorkouts) {
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    
+    // Get regular workouts
+    final regularWorkouts = getWorkoutsForDay(date);
+    
+    // Convert assigned workouts to Workout objects for the calendar
+    final assignedAsWorkouts = assignedWorkouts. where((assigned) {
+      final assignedDate = DateTime(
+        assigned. dueDate.year,
+        assigned.dueDate.month,
+        assigned.dueDate.day,
+      );
+      return assignedDate.isAtSameMomentAs(dateOnly) && 
+             assigned.status == AssignedWorkoutStatus.pending;
+    }).map((assigned) {
+      return Workout(
+        id: assigned.id,
+        name: assigned.workoutName,
+        date: assigned.dueDate,
+        muscleGroups: ['Assigned'],
+        status: WorkoutStatus. scheduled,
+        exercises: [],
+        isAssignedWorkout: true,
+        assignedWorkoutData: assigned,
+      );
+    }).toList();
+    
+    // Filter out duplicates
+    final filteredRegularWorkouts = regularWorkouts. where((workout) {
+      return !assignedAsWorkouts.any((assigned) => assigned.id == workout.id);
+    }).toList();
+    
+    return [... filteredRegularWorkouts, ... assignedAsWorkouts];
+  }
+
+  // Update active workout (when sets are completed)
   Future<void> updateActiveWorkout(Workout workout) async {
     _activeWorkout = workout;
     
     // Save updated state
-    await LocalStorageService. saveSetting('activeWorkout', workout.toJson());
+    await LocalStorageService.saveSetting('activeWorkout', workout.toJson());
     
     debugPrint('✅ Active workout updated');
     notifyListeners();
   }
 
-  // ✅ NEW: Clear active workout
+  // Clear active workout
   Future<void> clearActiveWorkout() async {
     _activeWorkout = null;
     _activeWorkoutStartTime = null;
@@ -85,13 +123,13 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     
     // Remove from persistent storage
     await LocalStorageService.saveSetting('activeWorkout', null);
-    await LocalStorageService. saveSetting('activeWorkoutStartTime', null);
+    await LocalStorageService.saveSetting('activeWorkoutStartTime', null);
     
     debugPrint('✅ Active workout cleared');
     notifyListeners();
   }
 
-  // ✅ NEW: Load active workout on app start
+  // Load active workout on app start
   Future<void> _loadActiveWorkout() async {
     try {
       final activeWorkoutJson = LocalStorageService.getSetting('activeWorkout');
@@ -104,11 +142,11 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
           _activeWorkoutStartTime = DateTime.parse(startTimeString);
           
           // Calculate elapsed time
-          final elapsed = DateTime. now().difference(_activeWorkoutStartTime!);
-          _activeWorkoutElapsedSeconds = elapsed. inSeconds;
+          final elapsed = DateTime.now().difference(_activeWorkoutStartTime!);
+          _activeWorkoutElapsedSeconds = elapsed.inSeconds;
         }
         
-        debugPrint('✅ Restored active workout: ${_activeWorkout!.name}');
+        debugPrint('✅ Restored active workout: ${_activeWorkout! .name}');
       }
     } catch (e) {
       debugPrint('❌ Error loading active workout: $e');
@@ -121,7 +159,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     
     await _loadWorkouts();
     await _loadTemplates();
-    await _loadActiveWorkout();  // ✅ NEW
+    await _loadActiveWorkout();
     
     _isInitialized = true;
     notifyListeners();
@@ -131,9 +169,9 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
   List<Workout> getAllWorkouts() {
     final allWorkouts = <Workout>[];
     for (var workoutList in _workouts.values) {
-      allWorkouts. addAll(workoutList);
+      allWorkouts.addAll(workoutList);
     }
-    allWorkouts. sort((a, b) => b.date.compareTo(a. date));
+    allWorkouts.sort((a, b) => b.date.compareTo(a. date));
     return allWorkouts;
   }
 
@@ -150,7 +188,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     final futureWorkouts = getAllWorkouts()
         .where((w) => w.status == WorkoutStatus.scheduled)
         .where((w) {
-          final workoutDate = DateTime(w.date.year, w. date.month, w.date. day);
+          final workoutDate = DateTime(w.date.year, w.date.month, w.date. day);
           return workoutDate.isAfter(today) || workoutDate.isAtSameMomentAs(today);
         })
         .toList();
@@ -204,7 +242,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
 
   // Load workouts from storage
   Future<void> _loadWorkouts() async {
-    debugPrint('📂 Loading workouts from Hive...');
+    debugPrint('📂 Loading workouts from Hive.. .');
     
     _workouts.clear();
     final allData = await LocalStorageService.getAllWorkouts();
@@ -236,7 +274,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     final allData = await LocalStorageService.getAllWorkouts();
     
     int loadedCount = 0;
-    for (var entry in allData.entries) {
+    for (var entry in allData. entries) {
       final key = entry.key;
       final data = entry.value;
       
@@ -283,7 +321,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     
     debugPrint('✅ Workout saved to Hive with key: ${completedWorkout.id}');
     
-    // ✅ Clear active workout when completing
+    // Clear active workout when completing
     await clearActiveWorkout();
     
     notifyListeners();
@@ -308,10 +346,10 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     final normalizedDate = DateTime(date.year, date.month, date.day);
     
     if (_workouts[normalizedDate] != null) {
-      _workouts[normalizedDate]!.removeWhere((w) => w.id == workoutId);
+      _workouts[normalizedDate]!. removeWhere((w) => w.id == workoutId);
       
       if (_workouts[normalizedDate]!.isEmpty) {
-        _workouts. remove(normalizedDate);
+        _workouts.remove(normalizedDate);
       }
     }
     
@@ -322,14 +360,14 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     notifyListeners();
   }
 
-  // FIXED: Clear all data including measurements
+  // Clear all data including measurements
   Future<void> clearAllData() async {
     debugPrint('🗑️ Clearing all data.. .');
     
     // Clear in-memory data
     _workouts.clear();
     _templates.clear();
-    await clearActiveWorkout();  // ✅ Also clear active workout
+    await clearActiveWorkout();
     
     // Clear from Hive
     await LocalStorageService.clearAllWorkouts();
@@ -342,7 +380,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     notifyListeners();
   }
 
-  // ✅ FIXED: Save template with duplicate name check
+  // Save template with duplicate name check
   Future<void> saveTemplate(Workout template) async {
     debugPrint('💾 Saving template: ${template.name}');
     
@@ -353,7 +391,6 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     ).toList();
     
     if (duplicates.isNotEmpty) {
-      // Template with same name exists - throw error
       debugPrint('❌ Template with name "${template.name}" already exists');
       throw Exception('DUPLICATE_NAME');
     }
@@ -372,7 +409,7 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     _templates.add(templateToSave);
     
     await LocalStorageService.saveWorkout(
-      'template_${templateToSave. id}',
+      'template_${templateToSave.id}',
       templateToSave.toJson(),
     );
     
@@ -386,126 +423,127 @@ Future<void> setActiveWorkout(Workout workout, {DateTime? startTime, int? elapse
     debugPrint('🗑️ Deleting template:  $templateId');
     
     _templates.removeWhere((t) => t.id == templateId);
-    await LocalStorageService. deleteWorkout('template_$templateId');
+    await LocalStorageService.deleteWorkout('template_$templateId');
     
     debugPrint('✅ Template deleted');
     
     notifyListeners();
   }
 
-  // Create workout from template
+  // ✅ FIXED: Create workout from template without copyWith
   Workout createWorkoutFromTemplate(Workout template) {
-    return template.copyWith(
+    return Workout(
       id: const Uuid().v4(),
+      name: template.name,
       date: DateTime.now(),
+      muscleGroups: template.muscleGroups,
       status: WorkoutStatus.inProgress,
+      isAssignedWorkout: false,
       exercises: template.exercises. map((exercise) {
         return Exercise(
-          id: exercise.id,
-          name: exercise.name,
+          id: '${template.id}_${exercise.name}_${DateTime.now().millisecondsSinceEpoch}',
+          name: exercise. name,
           muscleGroups: exercise.muscleGroups,
-          notes: exercise.notes,
           sets: exercise.sets. map((set) {
             return ExerciseSet(
               setNumber: set.setNumber,
-              targetReps: set.targetReps,
               targetWeight: set.targetWeight,
-              restSeconds: set.restSeconds,
-              actualReps: 0,
-              actualWeight: 0,
-              completed: false,
+              targetReps: set.targetReps,
+              actualWeight: set.targetWeight,
+              actualReps:  0,
             );
           }).toList(),
         );
       }).toList(),
+      notes: template.notes,
     );
   }
 
-// Get total PRs count
-int getTotalPRs() {
-  int totalPRs = 0;
-  final allWorkouts = getAllWorkouts()
-      .where((w) => w.status == WorkoutStatus.completed)
-      .toList();
+  // Get total PRs count
+  int getTotalPRs() {
+    int totalPRs = 0;
+    final allWorkouts = getAllWorkouts()
+        .where((w) => w.status == WorkoutStatus.completed)
+        .toList();
 
-  // Sort by date (oldest first)
-  allWorkouts.sort((a, b) => a.date.compareTo(b. date));
+    // Sort by date (oldest first)
+    allWorkouts.sort((a, b) => a.date.compareTo(b. date));
 
-  // Track PRs per exercise
-  final Map<String, List<Map<String, dynamic>>> exerciseHistory = {};
+    // Track PRs per exercise
+    final Map<String, List<Map<String, dynamic>>> exerciseHistory = {};
 
-  for (var workout in allWorkouts) {
-    for (var exercise in workout.exercises) {
-      // Find best set in this workout
-      ExerciseSet? bestSet;
-      
-      for (var set in exercise. sets) {
-        if (set.completed) {
-          if (bestSet == null ||
-              set.actualWeight > bestSet.actualWeight ||
-              (set.actualWeight == bestSet. actualWeight && set.actualReps > bestSet.actualReps)) {
-            bestSet = set;
-          }
-        }
-      }
-
-      if (bestSet != null) {
-        // Check if this is a PR
-        if (! exerciseHistory.containsKey(exercise.name)) {
-          exerciseHistory[exercise.name] = [];
-          totalPRs++; // First time doing this exercise
-        } else {
-          final history = exerciseHistory[exercise.name]!;
-          final lastBest = history.last;
-          
-          if (bestSet.actualWeight > lastBest['weight'] ||
-              (bestSet. actualWeight == lastBest['weight'] && bestSet.actualReps > lastBest['reps'])) {
-            totalPRs++; // New PR
+    for (var workout in allWorkouts) {
+      for (var exercise in workout.exercises) {
+        // Find best set in this workout
+        ExerciseSet? bestSet;
+        
+        for (var set in exercise. sets) {
+          if (set.completed) {
+            if (bestSet == null ||
+                set.actualWeight > bestSet.actualWeight ||
+                (set.actualWeight == bestSet.actualWeight && set. actualReps > bestSet.actualReps)) {
+              bestSet = set;
+            }
           }
         }
 
-        exerciseHistory[exercise.name]!.add({
-          'weight': bestSet.actualWeight,
-          'reps': bestSet.actualReps,
-        });
+        if (bestSet != null) {
+          // Check if this is a PR
+          if (! exerciseHistory. containsKey(exercise.name)) {
+            exerciseHistory[exercise.name] = [];
+            totalPRs++; // First time doing this exercise
+          } else {
+            final history = exerciseHistory[exercise.name]!;
+            final lastBest = history.last;
+            
+            if (bestSet.actualWeight > lastBest['weight'] ||
+                (bestSet. actualWeight == lastBest['weight'] && bestSet.actualReps > lastBest['reps'])) {
+              totalPRs++; // New PR
+            }
+          }
+
+          exerciseHistory[exercise.name]! .add({
+            'weight': bestSet.actualWeight,
+            'reps': bestSet. actualReps,
+          });
+        }
       }
     }
+
+    return totalPRs;
   }
 
-  return totalPRs;
-}
+  // Add scheduled workout
+  Future<void> addScheduledWorkout(Workout workout) async {
+    debugPrint('📅 Adding scheduled workout:  ${workout.name}');
+    
+    final scheduledWorkout = workout.copyWith(
+      status: WorkoutStatus.scheduled,
+    );
+    
+    _addWorkoutToMemory(scheduledWorkout);
+    await LocalStorageService.saveWorkout(scheduledWorkout.id, scheduledWorkout.toJson());
+    
+    debugPrint('✅ Scheduled workout added');
+    
+    notifyListeners();
+  }
 
-// Add scheduled workout
-Future<void> addScheduledWorkout(Workout workout) async {
-  debugPrint('📅 Adding scheduled workout: ${workout.name}');
-  
-  final scheduledWorkout = workout.copyWith(
-    status: WorkoutStatus.scheduled,
-  );
-  
-  _addWorkoutToMemory(scheduledWorkout);
-  await LocalStorageService.saveWorkout(scheduledWorkout. id, scheduledWorkout. toJson());
-  
-  debugPrint('✅ Scheduled workout added');
-  
-  notifyListeners();
-}
+  // Update scheduled workout
+  Future<void> updateScheduledWorkout(Workout workout) async {
+    debugPrint('📝 Updating scheduled workout: ${workout.name}');
+    
+    _addWorkoutToMemory(workout);
+    await LocalStorageService.saveWorkout(workout. id, workout.toJson());
+    
+    debugPrint('✅ Scheduled workout updated');
+    
+    notifyListeners();
+  }
 
-// Update scheduled workout
-Future<void> updateScheduledWorkout(Workout workout) async {
-  debugPrint('📝 Updating scheduled workout: ${workout.name}');
-  
-  _addWorkoutToMemory(workout);
-  await LocalStorageService. saveWorkout(workout.id, workout.toJson());
-  
-  debugPrint('✅ Scheduled workout updated');
-  
-  notifyListeners();
-}
-
-@override
-void dispose() {
-  _activeWorkoutTimer?.cancel();
-  super.dispose();
-}
+  @override
+  void dispose() {
+    _activeWorkoutTimer?.cancel();
+    super.dispose();
+  }
 }

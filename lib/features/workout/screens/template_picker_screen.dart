@@ -15,6 +15,7 @@ class TemplatePickerScreen extends StatelessWidget {
   final DateTime? scheduleDate;
   final bool isPastWorkout; // NEW
   final DateTime? selectedDate; // NEW
+  final bool isSelectionMode;
 
   const TemplatePickerScreen({
     super.key,
@@ -22,6 +23,7 @@ class TemplatePickerScreen extends StatelessWidget {
     this.scheduleDate,
     this.isPastWorkout = false, // NEW
     this.selectedDate, // NEW
+    this.isSelectionMode = false,
   });
 
   @override
@@ -353,6 +355,13 @@ void _logPastWorkout(
     Workout template,
     WorkoutProvider workoutProvider,
   ) {
+    
+    if (isSelectionMode) {
+      // Just return the selected template
+      Navigator.pop(context, template);
+      return;
+    }
+    
     showModalBottomSheet(
       context:  context,
       builder: (sheetContext) => Container(
