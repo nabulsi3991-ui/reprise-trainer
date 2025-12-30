@@ -135,13 +135,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
 
-                        // ✅ Trainer Code  (for trainers)
-                        if (user. isTrainer && user.trainerCode != null) ...[
-  const SizedBox(height: AppSpacing.md),
-  const Divider(),
-  const SizedBox(height: AppSpacing.sm),
-  TrainerCodeCard(trainerCode: user.trainerCode! ),
-],
+  
 
                         // Trainer Connection Info (for trainees)
                         if (!user.isTrainer && user. hasTrainer) ...[

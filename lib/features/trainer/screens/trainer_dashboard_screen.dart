@@ -5,6 +5,7 @@ import 'package:reprise/core/constants/app_text_styles.dart';
 import 'package:reprise/core/constants/app_spacing.dart';
 import 'package:reprise/features/user/providers/user_provider.dart';
 import 'package:reprise/features/workout/providers/workout_provider.dart';
+import 'package:reprise/core/theme/app_theme_manager.dart';
 
 class TrainerDashboardScreen extends StatelessWidget {
   const TrainerDashboardScreen({super. key});
@@ -66,7 +67,7 @@ class TrainerDashboardScreen extends StatelessWidget {
         },
         icon: const Icon(Icons.person_add),
         label: const Text('Add Trainee'),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: AppThemeManager.secondaryColor,
       ),
     );
   }

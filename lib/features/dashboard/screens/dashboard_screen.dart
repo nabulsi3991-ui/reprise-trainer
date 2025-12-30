@@ -2350,7 +2350,7 @@ void _startAssignedWorkout(AssignedWorkout assignedData) {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     user.trainerCode ?? 'N/A',
-                    style:  AppTextStyles.h2(color: AppColors.secondary),
+                    style:  AppTextStyles.h2(color: AppThemeManager.secondaryColor,),
                   ),
                 ],
               ),
@@ -2375,7 +2375,7 @@ void _startAssignedWorkout(AssignedWorkout assignedData) {
             },
             icon:  const Icon(Icons.copy, size: 18),
             label:  const Text('Copy Code'),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
+            style: ElevatedButton.styleFrom(backgroundColor: AppThemeManager.secondaryColor,),
           ),
         ],
       ),

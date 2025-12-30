@@ -109,7 +109,7 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                   ? 'Create Custom Exercise ($customCount saved)'
                   : 'Create Custom Exercise'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppThemeManager.secondaryColor,
+                backgroundColor: AppThemeManager.primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               ),
@@ -165,9 +165,9 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                             });
                           },
                           backgroundColor:  AppColors.surfaceLight,
-                          selectedColor: AppColors.primary,
+                          selectedColor: AppThemeManager.secondaryColor, 
                           labelStyle: TextStyle(
-                          color: isSelected ?  Colors.white : AppColors.textPrimary, // ✅ Black when not selected
+                          color: isSelected ? Colors.white : AppColors.textPrimary, // ✅ Black when not selected
                           fontWeight: isSelected ? FontWeight.w600 :  FontWeight.normal,
                         ),
                         ),
@@ -201,7 +201,7 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                             });
                           },
                           backgroundColor:  AppColors.surfaceLight,
-                          selectedColor: AppThemeManager.secondaryColor,
+                          selectedColor: AppThemeManager.primaryColor,
                           labelStyle: TextStyle(
   color: isSelected ? Colors.white : AppColors.textPrimary, // ✅ Black when not selected
   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -252,6 +252,7 @@ class _ExerciseSelectorScreenState extends State<ExerciseSelectorScreen> {
                           },
                           icon:  const Icon(Icons.add),
                           label: const Text('Create Custom Exercise'),
+                  
                         ),
                       ],
                     ),

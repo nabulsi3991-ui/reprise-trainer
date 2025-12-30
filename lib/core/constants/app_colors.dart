@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   // ✅ TRAINEE/PERSONAL COLORS (Purple/Pink theme)
   static const Color primary = Color(0xFF6C63FF); // Purple
-  static const Color secondary = Color(0xFFFF6584); // Pink
+  static const Color secondary = Color.fromARGB(228, 155, 149, 209);  
   static const Color success = Color(0xFF4CAF50); // Green
   static const Color error = Color(0xFFE53935); // Red
   static const Color warning = Color(0xFFFFA726); // Orange
@@ -11,7 +11,7 @@ class AppColors {
   
   // ✅ TRAINER COLORS (Cyan/Teal theme)
   static const Color trainerPrimary = Color(0xFF00BCD4); // Cyan
-  static const Color trainerSecondary = Color(0xFF9C27B0); // Purple
+  static const Color trainerSecondary = Color.fromARGB(255, 87, 156, 165); 
   static const Color trainerAccent = Color(0xFFFF9800); // Orange
   static const Color trainerSuccess = Color(0xFF66BB6A); // Light Green
   static const Color trainerInfo = Color(0xFF26C6DA); // Cyan accent
