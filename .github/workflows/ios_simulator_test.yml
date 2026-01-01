@@ -1,0 +1,84 @@
+name: iOS Simulator Test
+
+on:  
+  workflow_dispatch:  
+
+jobs:  
+  test-ios: 
+    name: Test iOS on Simulator
+    runs-on:  macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: subosito/flutter-action@v2
+      with:  
+        channel: 'stable'
+        flutter-version: '3.24.0'
+    
+    - run: flutter doctor -v
+    - run:  flutter pub get
+    - run:  flutter clean
+    
+    # ✅ List available simulators
+    - name: List Simulators
+      run: xcrun simctl list devices available
+    
+    # ✅ Boot iPhone simulator
+    - name: Boot Simulator
+      run: |
+        SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}')
+        echo "Booting simulator:  $SIMULATOR_ID"
+        xcrun simctl boot $SIMULATOR_ID || echo "Already booted"
+        xcrun simctl list devices | grep Booted
+    
+    # ✅ Build and run on simulator
+    - name: Build for Simulator
+      run: flutter build ios --simulator --debug
+      timeout-minutes: 20
+    
+    # ✅ Install on simulator
+    - name: Install on Simulator
+      run: |
+        SIMULATOR_ID=$(xcrun simctl list devices booted | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}' | head -1)
+        xcrun simctl install $SIMULATOR_ID build/ios/iphonesimulator/Runner.app
+    
+    # ✅ Launch app and capture logs
+    - name: Launch App
+      run: |
+        SIMULATOR_ID=$(xcrun simctl list devices booted | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}' | head -1)
+        xcrun simctl launch --console $SIMULATOR_ID com.example.reprise
+      timeout-minutes: 2
+      continue-on-error: true
+    
+    # ✅ Get simulator logs
+    - name: Get Logs
+      if: always()
+      run: |
+        SIMULATOR_ID=$(xcrun simctl list devices booted | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}' | head -1)
+        xcrun simctl spawn $SIMULATOR_ID log show --predicate 'process == "Runner"' --last 5m > simulator_logs.txt || echo "No logs"
+        cat simulator_logs.txt
+    
+    # ✅ Upload logs
+    - name: Upload Simulator Logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simulator-logs
+        path:  simulator_logs.txt
+        retention-days: 7
+    
+    # ✅ Take screenshot
+    - name: Screenshot
+      if: always()
+      run: |
+        SIMULATOR_ID=$(xcrun simctl list devices booted | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}' | head -1)
+        xcrun simctl io $SIMULATOR_ID screenshot screenshot.png
+    
+    - name: Upload Screenshot
+      if:  always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simulator-screenshot
+        path: screenshot. png
+        retention-days: 7

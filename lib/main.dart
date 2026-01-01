@@ -11,11 +11,13 @@ import 'package:reprise/features/auth/screens/auth_gate.dart';
 import 'package:reprise/shared/models/exercise_library.dart';
 import 'package:reprise/services/workout_notification_service.dart';
 import 'package:reprise/features/workout/providers/assigned_workout_provider.dart';
+import 'package:reprise/firebase_options.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
   await Hive.initFlutter();
   await Hive.openBox('workouts');
@@ -174,12 +176,8 @@ ThemeData _buildThemeData() {
         fontWeight: FontWeight.bold,
       ),
     ),
-    cardTheme: CardThemeData(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
+
+    
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: AppThemeManager. primaryColor,
       foregroundColor: Colors.white,
