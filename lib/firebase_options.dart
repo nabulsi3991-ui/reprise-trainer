@@ -57,9 +57,9 @@ class DefaultFirebaseOptions {
     storageBucket: 'reprise-ecf83.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD0tJ4I0pLb7jR8g_bXiO5olc7eP1_P-RE',
-    appId: '1:786659581442:ios: d191dffa1b443e2a2f511b',
+    static const FirebaseOptions ios = FirebaseOptions(
+    apiKey:  'AIzaSyD0tJ4I0pLb7jR8g_bXiO5olc7eP1_P-RE',
+    appId: '1:786659581442:ios:d191dffa1b443e2a2f511b',
     messagingSenderId:  '786659581442',
     projectId: 'reprise-ecf83',
     storageBucket: 'reprise-ecf83.firebasestorage.app',
